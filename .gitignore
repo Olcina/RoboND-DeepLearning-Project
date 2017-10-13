@@ -1,3 +1,12 @@
+# uncompressed images + roboSym
+data/train/
+data/validation/
+data/weights/
+data/sample_evaluation_data/
+data/*.zip
+Windows/
+*.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -102,4 +111,3 @@ ENV/
 .mypy_cache/
 
 RUNS/
-
