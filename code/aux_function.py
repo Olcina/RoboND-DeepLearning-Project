@@ -40,10 +40,18 @@ def bilinear_upsample(input_layer):
 
 def encoder_block(input_layer, filters, strides):
 
-    # TODO Create a separable convolution layer using the separable_conv2d_batchnorm() function.
+    #  Create a separable convolution layer using the separable_conv2d_batchnorm() function.
     lay1 = separable_conv2d_batchnorm(input_layer, filters, strides)
     #output_layer = conv2d_batchnorm(lay1, filters, kernel_size=1, strides=1)
     return lay1
+
+def double_encoder_block(input_layer, filters, strides):
+
+    #  Create a separable convolution layer using the separable_conv2d_batchnorm() function.
+    lay1 = separable_conv2d_batchnorm(input_layer, filters, strides)
+    output_layer = conv2d_batchnorm(lay1, filters, kernel_size=1, strides=1)
+    return output_layer
+
 
 def decoder_block(small_ip_layer, large_ip_layer, filters):
 
@@ -137,3 +145,39 @@ def fcn_model_best(inputs, num_classes):
     print('decoder4  layer size',decod4.get_shape().as_list())
     # The function returns the output layer of your model. "x" is the final layer obtained from the last decoder_block()
     return layers.Conv2D(num_classes, 3, activation='softmax', padding='same')(decod4)
+
+def train_model(test, inputs, output_layer):
+    #load variables for the test
+    learning_rate = test['learning_rate']
+    batch_size = test['batch_size']
+    steps_per_epoch = test['steps_per_epoch']
+    num_epochs = test['num_epochs']
+    validation_steps = test['validation_steps']
+    workers = test['workers']
+
+    # Define the Keras model and compile it for training
+    model = models.Model(inputs=inputs, outputs=output_layer)
+
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate), loss='categorical_crossentropy')
+
+    # Data iterators for loading the training and validation data
+    train_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
+                                                   data_folder=os.path.join('..', 'data', 'train'),
+                                                   image_shape=image_shape,
+                                                   shift_aug=True)
+
+    val_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
+                                                 data_folder=os.path.join('..', 'data', 'validation'),
+                                                 image_shape=image_shape)
+
+    #logger_cb = plotting_tools.LoggerPlotter()
+    #callbacks = [logger_cb]
+
+    model.fit_generator(train_iter,
+                        steps_per_epoch = steps_per_epoch, # the number of batches per epoch,
+                        epochs = num_epochs, # the number of epochs to train for,
+                        validation_data = val_iter, # validation iterator
+                        validation_steps = validation_steps, # the number of batches to validate on
+
+                        workers = workers)
+    return model

@@ -19,86 +19,42 @@ from utils import data_iterator
 from utils import model_tools
 #testing module
 from utils.testing_tools import create_test, dump_test_case, load_test_cases
-
-from aux_function import fcn_model_best, fcn_model, fcn_model2 , decoder_block, encoder_block,bilinear_upsample,conv2d_batchnorm,separable_conv2d_batchnorm
-"""
-DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
-"""
+import time
+import pickle
+from view_test_cases import load_available_models
+from aux_function import train_model,
+                         fcn_model_best, fcn_model, fcn_model2 ,
+                         decoder_block, encoder_block, double_encoder_block
+                         bilinear_upsample,conv2d_batchnorm,separable_conv2d_batchnorm
 
 image_hw = 160
 image_shape = (image_hw, image_hw, 3)
-inputs = layers.Input(image_shape)
 num_classes = 3
-
+#initial weights
+inputs = layers.Input(image_shape)
 # Call fcn_model()
 output_layer = fcn_model_best(inputs, num_classes)
-print('output layer size',output_layer.get_shape().as_list())
-logging.info('modelo preparado')
-
-
-
-"""
-DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
-"""
-def train_model(test, inputs, output_layer):
-    #load variables for the test
-    learning_rate = test['learning_rate']
-    batch_size = test['batch_size']
-    steps_per_epoch = test['steps_per_epoch']
-    num_epochs = test['num_epochs']
-    validation_steps = test['validation_steps']
-    workers = test['workers']
-
-    # Define the Keras model and compile it for training
-    model = models.Model(inputs=inputs, outputs=output_layer)
-
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate), loss='categorical_crossentropy')
-
-    # Data iterators for loading the training and validation data
-    train_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
-                                                   data_folder=os.path.join('..', 'data', 'train'),
-                                                   image_shape=image_shape,
-                                                   shift_aug=True)
-
-    val_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
-                                                 data_folder=os.path.join('..', 'data', 'validation'),
-                                                 image_shape=image_shape)
-
-    #logger_cb = plotting_tools.LoggerPlotter()
-    #callbacks = [logger_cb]
-
-    model.fit_generator(train_iter,
-                        steps_per_epoch = steps_per_epoch, # the number of batches per epoch,
-                        epochs = num_epochs, # the number of epochs to train for,
-                        validation_data = val_iter, # validation iterator
-                        validation_steps = validation_steps, # the number of batches to validate on
-
-                        workers = workers)
-    return model
-
-tests_cases = load_test_cases('best_model_test.p')
+tests_cases = load_available_models()
+print('---------------------')
+print('')
+kill_weights = input('kill weights after each test?....(y/n)?')
+if kill_weights == 'y':
+    kill_weights = True
+else:
+    kill_weights = False
 # Save your trained model weights
-import time
-import pickle
-#loop over all the test cases defined and save the training time
-training_times = []
+#loop over all the test cases defined
 for test in tests_cases:
-    print(test['name'])
-    test_training_time = {}
-    test_training_time['name'] = test['name']
-    #start the clock
-    test_training_time['start'] = time.time()
     #train the model
     model = train_model(test, inputs, output_layer)
-    #stop the clock
-    test_training_time['finish'] = time.time()
-    #append to dict
-    training_times.append(test_training_time)
+    #kill and initialize the weigts again for different calculation
+    #dont kill the weights for the same epoch number
+    if kill_weights:
+        inputs = None
+        inputs = layers.Input(image_shape)
+        #reset the model
+        output_layer = None
+        output_layer = fcn_model_best(inputs, num_classes)
     #save the weights of the model for evaluation
     weight_file_name = test['name']
     model_tools.save_network(model, weight_file_name)
-
-
-#save the times
-with open('train_time.p', 'wb+') as file:
-    pickle.dump(training_times, file)

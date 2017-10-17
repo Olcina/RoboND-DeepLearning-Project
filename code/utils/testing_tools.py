@@ -1,5 +1,6 @@
 import pickle
 import logging
+import os
 
 def create_test(encoder_type,learning_rate,batch_size,num_epochs,steps_per_epoch,validation_steps,workers):
     test = {}
@@ -30,8 +31,9 @@ def create_test(encoder_type,learning_rate,batch_size,num_epochs,steps_per_epoch
 
 def dump_test_case(test, pickle_file ='test_cases.p'):
     #load test in the pickle file and creates the file if doesn't exist
-
-        tests_cases = load_test_cases(pickle_file)
+        pickle_path = os.path.join('test_cases', pickle_file)
+        print(pickle_path)
+        tests_cases = load_test_cases(pickle_path)
         #add the new models to the model lists in pickle
         if not test['name'] in [x['name'] for x in tests_cases]:
             tests_cases.append(test)
@@ -39,18 +41,19 @@ def dump_test_case(test, pickle_file ='test_cases.p'):
         else:
             print('this settings are already loaded')
         #load the model to the text file
-        with open(pickle_file, "wb" ) as file:
+        with open(pickle_path, "wb" ) as file:
             pickle.dump( tests_cases, file )
 
         return tests_cases
 
 def load_test_cases(pickle_file):
+    pickle_path = os.path.join(pickle_file)
     #load test cases for
     try:
-        with open(pickle_file, "rb" ) as file:
+        with open(pickle_path, "rb" ) as file:
             tests_cases = pickle.load(file)
     except:
             tests_cases = []
-            open(pickle_file, 'wb+')
+            open(pickle_path, 'wb+')
             logging.info('created file: "', pickle_file, '" with empty string test = []')
     return tests_cases

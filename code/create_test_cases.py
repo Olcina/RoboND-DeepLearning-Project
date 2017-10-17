@@ -17,10 +17,8 @@ validation_steps = int(n_valid_images/num_epochs)
 workers = 2
 
 
-
+# load the test with the function create_test
 for i in range(0,5):
     test = create_test(encoder_type + str(i),learning_rate,batch_size,num_epochs,steps_per_epoch,validation_steps,workers)
-    tests_cases = dump_test_case(test,'best_model_test_lowLR.p')
-#Create a pickle file and load models in it
-for it in tests_cases:
-    print(it)
+    #load the test if doesnt exist another with the same name before
+    tests_cases = dump_test_case(test,'ebest_model_test_lowLR.p')
