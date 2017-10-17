@@ -76,7 +76,7 @@ def train_model(test, inputs, output_layer):
                         workers = workers)
     return model
 
-logging.info('modelo cargado')
+tests_cases = load_test_cases('DFCN_tests.p')
 # Save your trained model weights
 import time
 import pickle

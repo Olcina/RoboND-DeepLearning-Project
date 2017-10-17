@@ -42,8 +42,8 @@ def encoder_block(input_layer, filters, strides):
 
     # TODO Create a separable convolution layer using the separable_conv2d_batchnorm() function.
     lay1 = separable_conv2d_batchnorm(input_layer, filters, strides)
-    #output_layer = conv2d_batchnorm(lay1, filters, kernel_size=1, strides=1)
-    return lay1
+    output_layer = conv2d_batchnorm(lay1, filters, kernel_size=1, strides=1)
+    return output_layer
 
 def decoder_block(small_ip_layer, large_ip_layer, filters):
 
