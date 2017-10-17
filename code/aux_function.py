@@ -1,0 +1,110 @@
+import os
+import glob
+import sys
+import tensorflow as tf
+from tqdm import tqdm_notebook as tqdm
+import logging
+from scipy import misc
+import numpy as np
+
+from tensorflow.contrib.keras.python import keras
+from tensorflow.contrib.keras.python.keras import layers, models
+
+from tensorflow import image
+
+from utils import scoring_utils
+from utils.separable_conv2d import SeparableConv2DKeras, BilinearUpSampling2D
+from utils import data_iterator
+#from utils import plotting_tools
+from utils import model_tools
+#testing module
+from utils.testing_tools import create_test, dump_test_case, load_test_cases
+def separable_conv2d_batchnorm(input_layer, filters, strides=1):
+    output_layer = SeparableConv2DKeras(filters=filters,kernel_size=3, strides=strides,
+                             padding='same', activation='relu')(input_layer)
+
+    output_layer = layers.BatchNormalization()(output_layer)
+    return output_layer
+
+def conv2d_batchnorm(input_layer, filters, kernel_size=3, strides=1):
+    output_layer = layers.Conv2D(filters=filters, kernel_size=kernel_size, strides=strides,
+                      padding='same', activation='relu')(input_layer)
+
+    output_layer = layers.BatchNormalization()(output_layer)
+    return output_layer
+
+
+def bilinear_upsample(input_layer):
+    output_layer = BilinearUpSampling2D((2,2))(input_layer)
+    return output_layer
+
+def encoder_block(input_layer, filters, strides):
+
+    # TODO Create a separable convolution layer using the separable_conv2d_batchnorm() function.
+    lay1 = separable_conv2d_batchnorm(input_layer, filters, strides)
+    #output_layer = conv2d_batchnorm(lay1, filters, kernel_size=1, strides=1)
+    return lay1
+
+def decoder_block(small_ip_layer, large_ip_layer, filters):
+
+    # TODO Upsample the small input layer using the bilinear_upsample() function.
+    upsampled_layer = bilinear_upsample(small_ip_layer)
+    # TODO Concatenate the upsampled and large input layers using layers.concatenate
+    concatenated_layers = layers.concatenate([upsampled_layer, large_ip_layer])
+    # TODO Add some number of separable convolution layers
+    lay1 = separable_conv2d_batchnorm(concatenated_layers, filters, strides=1)
+    output_layer = separable_conv2d_batchnorm(lay1, filters, strides=1)
+    return output_layer
+
+def fcn_model(inputs, num_classes):
+
+    # TODO Add Encoder Blocks.
+    # Remember that with each encoder layer, the depth of your model (the number of filters) increases.
+    encod1 = encoder_block(inputs, 32, 2)
+    encod2 = encoder_block(encod1, 64, 2)
+    encod3 = encoder_block(encod2, 128, 2)
+    encod4 = encoder_block(encod3, 256, 2)
+    encod5 = encoder_block(encod4, 512, 2)
+
+    input_shape = inputs.get_shape().as_list()
+
+    print('input layer size',input_shape)
+    print('encod1 layer size',encod1.get_shape().as_list())
+    print('encod2 layer size',encod2.get_shape().as_list())
+    print('encod3 layer size',encod3.get_shape().as_list())
+    print('encod4 layer size',encod4.get_shape().as_list())
+    print('encod5 layer size',encod5.get_shape().as_list())
+    # TODO Add 1x1 Convolution layer using conv2d_batchnorm().
+    conv_layer = conv2d_batchnorm(encod5, 512, kernel_size=1, strides=1)
+
+    # TODO: Add the same number of Decoder Blocks as the number of Encoder Blocks
+    decod1 = decoder_block(conv_layer, encod4, 512)
+    decod2 = decoder_block(decod1, encod3, 256)
+    decod3 = decoder_block(decod2, encod2, 128)
+    decod4 = decoder_block(decod3, encod1, 64)
+    decod5 = decoder_block(decod4, inputs, 32)
+
+
+    print('conv_layer layer size',conv_layer.get_shape().as_list())
+    print('decoder1  layer size',decod1.get_shape().as_list())
+    print('decoder2  layer size',decod2.get_shape().as_list())
+    print('decoder3  layer size',decod3.get_shape().as_list())
+    print('decoder4  layer size',decod4.get_shape().as_list())
+    output_shape = decod5.get_shape().as_list()
+    print('decoder5  layer size',output_shape)
+
+    assert (input_shape[1:2] == output_shape[1:2]), "Input/Output shapes are not the shame %r !=  %r" % (input_shape,output_shape)
+    # The function returns the output layer of your model. "x" is the final layer obtained from the last decoder_block()
+    return layers.Conv2D(num_classes, 3, activation='softmax', padding='same')(decod5)
+
+def fcn_model2(inputs, num_classes):
+
+    # TODO Add Encoder Blocks.
+    # Remember that with each encoder layer, the depth of your model (the number of filters) increases.
+    encod1 = encoder_block(inputs, 2, 2)
+    input_shape = inputs.get_shape().as_list()
+    conv_layer = conv2d_batchnorm(encod1, 2, kernel_size=1, strides=1)
+    # TODO: Add the same number of Decoder Blocks as the number of Encoder Blocks
+    decod1 = decoder_block(conv_layer, inputs, 2)
+
+    return layers.Conv2D(num_classes, 3, activation='softmax', padding='same')(decod1)
