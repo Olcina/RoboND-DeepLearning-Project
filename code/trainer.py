@@ -20,7 +20,7 @@ from utils import model_tools
 #testing module
 from utils.testing_tools import create_test, dump_test_case, load_test_cases
 
-from aux_function import fcn_model, fcn_model2 , decoder_block, encoder_block,bilinear_upsample,conv2d_batchnorm,separable_conv2d_batchnorm
+from aux_function import fcn_model_best, fcn_model, fcn_model2 , decoder_block, encoder_block,bilinear_upsample,conv2d_batchnorm,separable_conv2d_batchnorm
 """
 DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
 """
@@ -31,7 +31,7 @@ inputs = layers.Input(image_shape)
 num_classes = 3
 
 # Call fcn_model()
-output_layer = fcn_model(inputs, num_classes)
+output_layer = fcn_model_best(inputs, num_classes)
 print('output layer size',output_layer.get_shape().as_list())
 logging.info('modelo preparado')
 
@@ -76,7 +76,7 @@ def train_model(test, inputs, output_layer):
                         workers = workers)
     return model
 
-tests_cases = load_test_cases('DFCN_tests.p')
+tests_cases = load_test_cases('best_model_test.p')
 # Save your trained model weights
 import time
 import pickle

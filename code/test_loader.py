@@ -8,19 +8,19 @@ n_valid_images = len(glob.glob(os.path.join('..', 'data', 'validation','images',
 n_train_images = len(glob.glob(os.path.join('..', 'data', 'train','images','*')))
 
 #define Hyperparameters to load
-encoder_type= 'DFCN_5layers'
-learning_rate = 0.0001
+encoder_type= 'FCN4_'
+learning_rate = 0.001
 batch_size = 50
-num_epochs = 51
+num_epochs = 20
 steps_per_epoch = int(n_train_images/num_epochs)
 validation_steps = int(n_valid_images/num_epochs)
 workers = 2
 
 
 
-
-test = create_test(encoder_type,learning_rate,batch_size,num_epochs,steps_per_epoch,validation_steps,workers)
-tests_cases = dump_test_case(test,'DFCN_tests.p')
+for i in range(0,5):
+    test = create_test(encoder_type + str(i),learning_rate,batch_size,num_epochs,steps_per_epoch,validation_steps,workers)
+    tests_cases = dump_test_case(test,'best_model_test_lowLR.p')
 #Create a pickle file and load models in it
 for it in tests_cases:
     print(it)
