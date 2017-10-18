@@ -22,9 +22,9 @@ from utils.testing_tools import create_test, dump_test_case, load_test_cases
 import time
 import pickle
 from view_test_cases import load_available_models
-from aux_function import train_model,
-                         fcn_model_best, fcn_model, fcn_model2 ,
-                         decoder_block, encoder_block, double_encoder_block
+from aux_function import train_model, \
+                         fcn_model_best, fcn_model, fcn_model2 , \
+                         decoder_block, encoder_block, double_encoder_block, \
                          bilinear_upsample,conv2d_batchnorm,separable_conv2d_batchnorm
 
 image_hw = 160
@@ -46,7 +46,7 @@ else:
 #loop over all the test cases defined
 for test in tests_cases:
     #train the model
-    model = train_model(test, inputs, output_layer)
+    model = train_model(test, inputs, output_layer, image_shape)
     #kill and initialize the weigts again for different calculation
     #dont kill the weights for the same epoch number
     if kill_weights:

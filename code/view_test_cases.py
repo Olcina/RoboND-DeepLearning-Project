@@ -14,6 +14,7 @@ def load_available_models(print_in_terminal= False):
     print('')
 
     tests_cases = load_test_cases(available_models[int(case)-1])
+    tests_cases = sorted(tests_cases, key=lambda k: k['name'])
     if print_in_terminal:
         for it in tests_cases:
             print(it)
