@@ -76,7 +76,7 @@ In the Convolutional Neural Network Lab (CNN-Lab) we applied several convolution
 
 This dense layer method throw away all the spatial coordinates as the desired output is a non-spatial categorization. If we use a 1x1 convolution with a kernel that cover the entire input instead of a fully connected layer we can maintain the spatial information. The figure 4 illustrate this transformation of a CNN in a FCN for make spatial prediction maps [1].
 
-<img src="images/FCN_layers.png" width="400">
+<img src="images/FCN_layers.PNG" width="400">
 <p style="text-align: center;">Fig. 4 </p>
 
 The next important concept in making FCN is skip connections so we can recover information from deeper layers containing finest details, in my first attempt to build the FCN I attached only one decoder block to the final convolution obtaining a full set of red classified images. After more failed attempts without adding the weights for the final classification layer, I understood that I needed to sum up the layers decoding the information with the bilinear upsampling method.
@@ -96,7 +96,7 @@ def decoder_block(small_ip_layer, large_ip_layer, filters):
 
 Studying a little bit more the upsampling and method I decided to go with a 4 layer encoder/decoder solution as shows the figure 5 [2]. The last layer that act as a classifier is a 2Dconvolution with 3 channels as we want to choose among 3 different categories for each pixel.
 
-<img src="images/SkipConnections.png" width="600">
+<img src="images/SkipConnections.PNG" width="600">
 <p style="text-align: center;">Fig. 5 </p>
 
 For the final model I used a simple encoder block with only one 2D separable convolution. In the layer there is also a batch normalization steps, the batch normalization tries to reduce the internal covariate shift in order to improve the training speed, achieve higher accuracy and use higher learning rates. Also, it can be seen as a substitute for dropout as acts as a regularizer.[3]
