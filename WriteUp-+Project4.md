@@ -10,7 +10,7 @@
 5. [Final Results](#FR)
 6. [Further Developments](#FD)
 7. [References](#ref)
-     
+
 
 - ####  Data Analisys <a id='DataAnalisys'></a>
 
@@ -24,21 +24,21 @@ The dron has 4 cameras with different views/ranges:
 
 The files after recording are labeled as follow for one of the four cameras  "cam( number )_( 5 digits number )"
 
-![dron_images_raw](../images/run3_hero_on_background.png)
+![dron_images_raw](images/run3_hero_on_background.png)
 <p style="text-align: center;">Fig. 1 </p>
 
-With a simple script we can extract and visualize the different camera views and finally obtain a masked image. Hopefully Udacity provides a preprocess function that make this for us but I found very instructional doing it by myself. The figure 2 illustrate the masking process. 
+With a simple script we can extract and visualize the different camera views and finally obtain a masked image. Hopefully Udacity provides a preprocess function that make this for us but I found very instructional doing it by myself. The figure 2 illustrate the masking process.
 
-![mask_process](../images/run3_hero_on_background_mask.png)
+![mask_process](images/run3_hero_on_background_mask.png)
 <p style="text-align: center;">Fig. 2 </p>
 
 Additionally, as we saw in the lectures the input data for the neural network should be conditioned in order to help the convergence of the model as we train it. In the next section we take a random raw image (figure 3) from the drone camera and calculate the input after and before the preprocess_input function.
-      
-      
-![random_raw_image](../images/cam1_00002.png)
+
+
+![random_raw_image](images/cam1_00002.png)
 <p style="text-align: center;">Fig. 3 </p>
 
-``` python 
+``` python
 def preprocess_input(x):
     x = x/255.
     x = x-0.5
@@ -68,22 +68,22 @@ after_processing_analysis_img = preprocess_input(analysis_img)
 
 - processed image : [max,min,mean,std] =  [1.0, -1.0, -0.18, 0.53]
 
-Now we have a well conditioned image input for a neural network (low standard deviation "0.53" and near zero mean "-0.18"), and as the multiplication and sum operator are bijective functions we have the same information but in a different spatial position. 
+Now we have a well conditioned image input for a neural network (low standard deviation "0.53" and near zero mean "-0.18"), and as the multiplication and sum operator are bijective functions we have the same information but in a different spatial position.
 
 ##  Network Analysis <a id='NetAnalysis'></a>
 
-In the Convolutional Neural Network Lab (CNN-Lab) we applied several convolutional layers to an image. This method allow the extraction of features from different places in the image, so our neural network could compare and detect images even if they are in different positions within the input image. The final objective of a CNN is to classify and image in a simple categories list, to make this possible the final layers of the CNN are a few fully connected and dropout layers that ended in a final classification output layer. 
+In the Convolutional Neural Network Lab (CNN-Lab) we applied several convolutional layers to an image. This method allow the extraction of features from different places in the image, so our neural network could compare and detect images even if they are in different positions within the input image. The final objective of a CNN is to classify and image in a simple categories list, to make this possible the final layers of the CNN are a few fully connected and dropout layers that ended in a final classification output layer.
 
 This dense layer method throw away all the spatial coordinates as the desired output is a non-spatial categorization. If we use a 1x1 convolution with a kernel that cover the entire input instead of a fully connected layer we can maintain the spatial information. The figure 4 illustrate this transformation of a CNN in a FCN for make spatial prediction maps [1].
 
-<img src="../images/FCN_layers.png" width="400">
+<img src="images/FCN_layers.png" width="400">
 <p style="text-align: center;">Fig. 4 </p>
 
 The next important concept in making FCN is skip connections so we can recover information from deeper layers containing finest details, in my first attempt to build the FCN I attached only one decoder block to the final convolution obtaining a full set of red classified images. After more failed attempts without adding the weights for the final classification layer, I understood that I needed to sum up the layers decoding the information with the bilinear upsampling method.
 
 ``` python
 def decoder_block(small_ip_layer, large_ip_layer, filters):
-    
+
     # Upsample the small input layer using the bilinear_upsample() function.
     upsampled_layer = bilinear_upsample(small_ip_layer)
     # Concatenate the upsampled and large input layers using layers.concatenate
@@ -96,14 +96,14 @@ def decoder_block(small_ip_layer, large_ip_layer, filters):
 
 Studying a little bit more the upsampling and method I decided to go with a 4 layer encoder/decoder solution as shows the figure 5 [2]. The last layer that act as a classifier is a 2Dconvolution with 3 channels as we want to choose among 3 different categories for each pixel.
 
-<img src="../images/SkipConnections.png" width="600">
+<img src="images/SkipConnections.png" width="600">
 <p style="text-align: center;">Fig. 5 </p>
 
 For the final model I used a simple encoder block with only one 2D separable convolution. In the layer there is also a batch normalization steps, the batch normalization tries to reduce the internal covariate shift in order to improve the training speed, achieve higher accuracy and use higher learning rates. Also, it can be seen as a substitute for dropout as acts as a regularizer.[3]
 
 ``` python
 def encoder_block(input_layer, filters, strides):
-    
+
     #  Create a separable convolution layer using the separable_conv2d_batchnorm() function.
     output_layer = separable_conv2d_batchnorm(input_layer, filters, strides)
     return output_layer
@@ -137,7 +137,7 @@ def fcn_model_best(inputs, num_classes):
 ```
 
 
-We could visualize the shape of the Tensors with the methods `get_shape()` and `as_list()`. As we see the final layer has the same shape as the input layer. If we choose to change the size of the input image, the output image would change as well. 
+We could visualize the shape of the Tensors with the methods `get_shape()` and `as_list()`. As we see the final layer has the same shape as the input layer. If we choose to change the size of the input image, the output image would change as well.
 
 
 Layer Size | shape
@@ -157,9 +157,9 @@ decoder4   | `[None, 160, 160, 32]`
 
 ## HyperParameters and Iterations <a id='HP'></a>
 
-With all the theory at hand the next step was put all this to work, tuning the hyperparameters and the deep of our networks for getting the best results. I started with the final parameters from the segmentation lab and code the proposed values for the `steps_per_epoch` and `validaion_steps`. I added my own variables `encoder_type` and `test_name` to help me track all the tests that I did. 
+With all the theory at hand the next step was put all this to work, tuning the hyperparameters and the deep of our networks for getting the best results. I started with the final parameters from the segmentation lab and code the proposed values for the `steps_per_epoch` and `validaion_steps`. I added my own variables `encoder_type` and `test_name` to help me track all the tests that I did.
 
-``` python 
+``` python
 # HYPERPARAMS EXAMPLE
 
 #stract stats from the training folder
@@ -183,21 +183,21 @@ I create some tools to help me run the tests in the AWS virtual instance without
 
  - Select some hyperparemeters and load the cases to a pickle file with `create_test_cases.py`
  - launch the `trainer.py` inside the AWS to run the test cases all together.
- 
- To visualize the test cases I use `view_test_cases.py`.
- 
-When you launch `trainer.py` it asks for the test_file.p that you want to use. Choose a number and go with this one. After this `trainer.py` ask for keep or discard the previous weights. If 'yes' is selected we can continue training the model and change whatever hyperparameter we may need to change. 
 
-An example of a test_cases is: 
+ To visualize the test cases I use `view_test_cases.py`.
+
+When you launch `trainer.py` it asks for the test_file.p that you want to use. Choose a number and go with this one. After this `trainer.py` ask for keep or discard the previous weights. If 'yes' is selected we can continue training the model and change whatever hyperparameter we may need to change.
+
+An example of a test_cases is:
 ``` python
 {'workers': 2, 'steps_per_epoch': 206, 'encoder_type': 'FCN4_0', 'name': 'FCN4_0_lr0001_bs50_ne20_se206_vs59_wr2', 'validation_steps': 59, 'batch_size': 50, 'num_epochs': 20, 'learning_rate': 0.0001}
 {'steps_per_epoch': 206, 'workers': 2, 'encoder_type': 'FCN4_1', 'name': 'FCN4_1_lr0001_bs50_ne20_se206_vs59_wr2', 'batch_size': 50, 'num_epochs': 20, 'learning_rate': 0.0001, 'validation_steps': 59}
  ```
- 
- In this case we train the model in two equal steps of 20 epoch each. The testing tools can be found in [../utils/testing_tools.py] 
+
+ In this case we train the model in two equal steps of 20 epoch each. The testing tools can be found in [../utils/testing_tools.py]
 
 
-After the four encod/decod blocks FCN with 1 layer encoder, I tried to going deeper with a double layer encoder and 5 blocks, but the results that I was obtaining after several different learning rates and batch sizes (28% / 30% ) were lower than with the 4  simple encoder model model (34%). 
+After the four encod/decod blocks FCN with 1 layer encoder, I tried to going deeper with a double layer encoder and 5 blocks, but the results that I was obtaining after several different learning rates and batch sizes (28% / 30% ) were lower than with the 4  simple encoder model model (34%).
 
 I spent several days twitching and testing different parameters, lower learning rates with more epochs or different batches sizes. But the highest rank that I achieve was the 34%. The next step was go the simulator and gather more data.
 
@@ -206,11 +206,11 @@ I spent several days twitching and testing different parameters, lower learning 
 Following the instruction from the project gather more data was very easy once you understand the file structure.
 
 I focused on the hero from far away as the result for previous training showed that is where the model was failing. After 3 different runs in different parts of "Udacity" I added 872 new images and mask (obtained with `preprocess_ims.py`).
- 
+
 
 An example of the sets that I used is shown in the figure 6
 
-<img src="../images/record1.jpg" width="560">
+<img src="images/record1.jpg" width="560">
 <p style="text-align: center;">Fig. 6 </p>
 
 The final data set for training contained:
@@ -225,7 +225,7 @@ The evaluation of the model is an easy task provided by Udacity.
 
 The name for my final model is `FCN4_SIMPLE_lr001_bs50_ne20_se250_vs59_wr4`, The hyperparameters can be extracted  from the name convention and are the following:
 
-- encoder_type= 'FCN4_SIMPLE' 
+- encoder_type= 'FCN4_SIMPLE'
 - learning_rate = 0.001
 - batch_size = 50
 - num_epochs = 20
@@ -238,19 +238,19 @@ FCN4_SIMPLE is the name for the `fcn_model_best` contained in `aux_functions.py`
 The next 3 figures are shown the predictions of the model in the different scenarios:
 
 #### While following the target
-<img src="../images/hero_predictions.png" width="560">
+<img src="images/hero_predictions.png" width="560">
 <p style="text-align: center;">Fig. 7 </p>
 
     number true positives: 539, number false positives: 0, number false negatives: 0
 
 #### While at patrol without target
-<img src="../images/people_predictions.png" width="560">
+<img src="images/people_predictions.png" width="560">
 <p style="text-align: center;">Fig. 8 </p>
 
     number true positives: 0, number false positives: 39, number false negatives: 0
 
 #### While at patrol with target
-<img src="../images/patrol_predictions.png" width="560">
+<img src="images/patrol_predictions.png" width="560">
 <p style="text-align: center;">Fig. 9 </p>
 
     number true positives: 121, number false positives: 1, number false negatives: 180
