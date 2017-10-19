@@ -1,6 +1,9 @@
 # uncompressed images + roboSym
 data/raw_sim_data/
 data/*.zip
+data/sample_evaluation_data/
+data/train/
+data/validation/
 Windows/
 *.zip
 
