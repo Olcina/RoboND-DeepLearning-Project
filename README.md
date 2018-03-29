@@ -5,7 +5,7 @@ This work is part of the Udacity [Software Robotics NanoDegree](https://eu.udaci
 
 ### INDEX
 
-1. [Data Analysis](#DataAnalisys)
+1. [Data Analysis](#DataAnalysis)
 2. [Network Analysis](#NetAnalysis)
 3. [HyperParameters and Iterations](#HP)
 4. [Data Gathering](#DataGathering)
@@ -14,7 +14,7 @@ This work is part of the Udacity [Software Robotics NanoDegree](https://eu.udaci
 7. [References](#ref)
 
 
-- ####  Data Analisys <a id='DataAnalisys'></a>
+- ####  Data Analysis <a id='DataAnalysis'></a>
 
 After completing the segmentation lab one of the first things that I wondered about when carrying out this project was how to obtain the masks for training and validation data. After download and record the first run the answer was pretty obvious
 
